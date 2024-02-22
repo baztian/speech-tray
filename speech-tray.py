@@ -30,10 +30,12 @@ def create_pixbuf_from_image(image):
     pixbuf = GdkPixbuf.Pixbuf.new_from_bytes(data, GdkPixbuf.Colorspace.RGB, False, 8, w, h, w * 3)
     return pixbuf
 
-def create_pause_icon():
+def create_image_and_get_drawer():
     image = Image.new('RGB', IMG_SIZE, color='white')
-    draw = ImageDraw.Draw(image)
+    return image, ImageDraw.Draw(image)
 
+def create_pause_icon():
+    image, draw = create_image_and_get_drawer()
     # Define the size and position of the pause rectangles
     rect_width = IMG_SIZE[0] // 8  # Width of each pause rectangle
     gap = rect_width  # Gap between rectangles
@@ -48,11 +50,7 @@ def create_pause_icon():
     return image
 
 def create_record_icon():
-    image = Image.new('RGB', IMG_SIZE, color='white')
-
-    # Initialize the drawing context
-    draw = ImageDraw.Draw(image)
-
+    image, draw = create_image_and_get_drawer()
     # Define the size and position of the record circle
     circle_center = (IMG_SIZE[0] // 2, IMG_SIZE[1] // 2)
     circle_radius = IMG_SIZE[0] // 4
@@ -63,9 +61,7 @@ def create_record_icon():
     return image
 
 def create_cursor_icon():
-    image = Image.new('RGB', IMG_SIZE, color='white')
-    draw = ImageDraw.Draw(image)
-
+    image, draw = create_image_and_get_drawer()
     # Define the size and position of the cursor lines
     line_width = 4  # Width of the lines
     vertical_line_height = IMG_SIZE[1] // 2  # Height of the vertical line
