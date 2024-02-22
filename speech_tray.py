@@ -191,17 +191,16 @@ def create_menu_item(label, callback):
     item = Gtk.MenuItem()
     item.set_label(label)
     item.connect("activate", callback)
-    item.show()
     return item
+
+# Queue to hold the change commands
+task_queue = queue.Queue()
 
 def main():
     write_pid()
     # Register the signal handler
     signal.signal(signal.SIGUSR1, record_signal)
     signal.signal(signal.SIGUSR2, record_signal)
-
-    # Queue to hold the change commands
-    task_queue = queue.Queue()
 
     # Create the status icon
     status_icon = Gtk.StatusIcon.new_from_pixbuf(PAUSE_ICON)
@@ -214,6 +213,7 @@ def main():
     menu.append(create_menu_item("Record english", start_english))
     menu.append(create_menu_item("Record german", start_german))
     menu.append(create_menu_item("Quit", lambda _: task_queue.put(Task('quit'))))
+    menu.show_all()
     status_icon.connect('popup-menu', lambda icon, button, time: menu.popup(None, None, None, icon, button, time))
 
     task_handler_thread = threading.Thread(target=tray_icon_task_handler, args=(task_queue, status_icon))
