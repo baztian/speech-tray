@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
+import os
+from pathlib import Path
 import queue
 import subprocess
-import sys
 import signal
 import threading
-import time
 from PIL import Image, ImageDraw
 import speech_recognition as sr
 import gi
@@ -14,7 +14,6 @@ gi.require_version('AppIndicator3', '0.1')
 from gi.repository import Gtk, GdkPixbuf, GLib
 
 IMG_SIZE = (64, 64)
-
 
 def create_pixbuf_from_image(image):
     data = image.tobytes()
@@ -95,7 +94,10 @@ class Task:
 
 # Signal handler for SIGUSR1
 def record_signal(signum, frame):
-    record(language=None)
+    language=None
+    if signum == signal.SIGUSR2:
+        language = 'de-DE'
+    record(language=language)
 
 def record(language=None):
     print('Recording...')
@@ -112,7 +114,7 @@ def get_audio_text(language=None):
     language = language or "en-US"
     recognizer = sr.Recognizer()
     with sr.Microphone() as source:
-        print("Say something:")
+        print(f"Say something [{language}]:")
         audio = recognizer.listen(source)
 
     try:
@@ -142,9 +144,22 @@ def tray_icon_task_handler(task_queue, status_icon):
             GLib.idle_add(Gtk.main_quit)
             break
 
+def get_xdg_base_dir():
+    xdg_config_home = os.environ.get('XDG_CONFIG_HOME', Path.home() / '.local/share')
+    return Path(xdg_config_home)
+
+def write_pid():
+    pid_dir = get_xdg_base_dir() / 'speech-tray'
+    pid_dir.mkdir(parents=True, exist_ok=True)
+    pid_file = pid_dir / 'pid.txt'
+    with pid_file.open('w') as f:
+        f.write(str(os.getpid()))
+
 if __name__ == '__main__':
+    write_pid()
     # Register the signal handler
-    signal.signal(signal.SIGUSR1, record)
+    signal.signal(signal.SIGUSR1, record_signal)
+    signal.signal(signal.SIGUSR2, record_signal)
 
     # Queue to hold the change commands
     task_queue = queue.Queue()
