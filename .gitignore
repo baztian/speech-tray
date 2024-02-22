@@ -1,0 +1,23 @@
+# .gitignore
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+
+# Test artifacts
+.tox/
+.coverage
+.htmlcov/
+
+# IDEs
+.idea/
+.vscode/
+
+# OS artifacts
+.DS_Store
+Thumbs.db
