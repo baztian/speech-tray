@@ -14,3 +14,7 @@ Then, clone the repository and install the Python dependencies:
     cd speech_tray
     pip install -r requirements.txt
     pip install .
+
+## License
+
+This project is licensed under the terms of the MIT license. See the [LICENSE](LICENSE) file for details.
