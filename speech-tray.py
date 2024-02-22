@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Speech Tray
 
@@ -22,6 +23,8 @@ gi.require_version('AppIndicator3', '0.1')
 from gi.repository import Gtk, GdkPixbuf, GLib
 
 IMG_SIZE = (64, 64)
+
+recognizer = sr.Recognizer()
 
 def create_pixbuf_from_image(image):
     data = image.tobytes()
@@ -60,6 +63,23 @@ def create_record_icon():
                 circle_center[0] + circle_radius, circle_center[1] + circle_radius), fill='red')
     return image
 
+def create_extraction_icon():
+    image, draw = create_image_and_get_drawer()
+    cloud_ellipses = [
+        (10, 25, 50, 50),  # left part
+        (25, 10, 65, 40),  # upper middle part
+        (50, 20, 80, 50),  # right part
+    ]
+    cloud_rectangles = [
+        (25, 30, 65, 50),  # bottom middle part
+    ]
+    # Draw the cloud parts
+    for ellipse in cloud_ellipses:
+        draw.ellipse(ellipse, fill='blue')
+    for rect in cloud_rectangles:
+        draw.rectangle(rect, fill='blue')
+    return image
+
 def create_cursor_icon():
     image, draw = create_image_and_get_drawer()
     # Define the size and position of the cursor lines
@@ -90,6 +110,7 @@ def create_cursor_icon():
 PAUSE_ICON = create_pixbuf_from_image(create_pause_icon())
 RECORD_ICON = create_pixbuf_from_image(create_record_icon())
 CURSOR_ICON = create_pixbuf_from_image(create_cursor_icon())
+EXTRACTION_ICON = create_pixbuf_from_image(create_extraction_icon())
 
 class Task:
     def __init__(self, action, data=None):
@@ -115,18 +136,16 @@ def record(language=None):
     task_queue.put(Task('change_icon', PAUSE_ICON))
 
 def get_and_insert_text(language):
-    text = get_audio_text(language)
-    if text:
-        task_queue.put(Task('change_icon', CURSOR_ICON))
-        task_queue.put(Task('insert_text', text))
+    audio = get_audio()
+    task_queue.put(Task('change_icon', EXTRACTION_ICON))
+    task_queue.put(Task('extract_text', (audio, language)))
 
-def get_audio_text(language=None):
-    language = language or "en-US"
-    recognizer = sr.Recognizer()
+def get_audio():
     with sr.Microphone() as source:
-        print(f"Say something [{language}]:")
-        audio = recognizer.listen(source)
+        return recognizer.listen(source)
 
+def extract_text(audio, language):
+    language = language or "en-US"
     try:
         text = recognizer.recognize_google(audio, language=language)
         return text
@@ -146,6 +165,10 @@ def tray_icon_task_handler(task_queue, status_icon):
             GLib.idle_add(status_icon.set_from_pixbuf, task.data)
         elif task.action == 'get_and_insert_text':
             get_and_insert_text(task.data)
+        elif task.action == 'extract_text':
+            text = extract_text(*task.data)
+            task_queue.put(Task('change_icon', CURSOR_ICON))
+            task_queue.put(Task('insert_text', text))
         elif task.action == 'insert_text':
             insert_text_at_cursor(task.data)
             task_queue.put(Task('change_icon', PAUSE_ICON))
@@ -190,7 +213,7 @@ if __name__ == '__main__':
     menu = Gtk.Menu()
     menu.append(create_menu_item("Record english", start_english))
     menu.append(create_menu_item("Record german", start_german))
-    menu.append(create_menu_item("Quit", quit))
+    menu.append(create_menu_item("Quit", lambda _: task_queue.put(Task('quit'))))
     status_icon.connect('popup-menu', lambda icon, button, time: menu.popup(None, None, None, icon, button, time))
 
     task_handler_thread = threading.Thread(target=tray_icon_task_handler, args=(task_queue, status_icon))
