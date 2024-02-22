@@ -194,7 +194,6 @@ def set_language(language):
     selected_language = language
 
 def on_left_click(icon):
-    print(icon)
     start_recording(selected_language)
 
 def create_menu():
