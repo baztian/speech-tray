@@ -1,4 +1,12 @@
 #!/usr/bin/env python3
+"""
+Speech Tray
+
+This script creates a system tray application that uses speech recognition to convert
+spoken words into text and insert them at the current cursor position. It uses the
+Google Speech Recognition API for speech-to-text conversion, and the GTK library for
+the system tray interface.
+"""
 import os
 from pathlib import Path
 import queue
@@ -94,13 +102,18 @@ class Task:
 
 # Signal handler for SIGUSR1
 def record_signal(signum, frame):
-    language=None
     if signum == signal.SIGUSR2:
-        language = 'de-DE'
-    record(language=language)
+        start_german()
+    else:
+        start_english()
+
+def start_english():
+    record()
+
+def start_german():
+    record(language='de-DE')
 
 def record(language=None):
-    print('Recording...')
     task_queue.put(Task('change_icon', RECORD_ICON))
     task_queue.put(Task('get_and_insert_text', language))
     task_queue.put(Task('change_icon', PAUSE_ICON))
@@ -155,6 +168,13 @@ def write_pid():
     with pid_file.open('w') as f:
         f.write(str(os.getpid()))
 
+def create_menu_item(label, callback):
+    item = Gtk.MenuItem()
+    item.set_label(label)
+    item.connect("activate", callback)
+    item.show()
+    return item
+
 if __name__ == '__main__':
     write_pid()
     # Register the signal handler
@@ -172,18 +192,9 @@ if __name__ == '__main__':
 
     # Create a menu for the status icon
     menu = Gtk.Menu()
-    record_item = Gtk.MenuItem(label='Record en-US')
-    record_item.connect('activate', lambda _: record())
-    record_item.show()
-    menu.append(record_item)
-    record_de_item = Gtk.MenuItem(label='Record de-DE')
-    record_de_item.connect('activate', lambda _: record('de-DE'))
-    record_de_item.show()
-    menu.append(record_de_item)
-    quit_item = Gtk.MenuItem(label='Quit')
-    quit_item.connect('activate', lambda _: task_queue.put(Task('quit')))
-    quit_item.show()
-    menu.append(quit_item)
+    menu.append(create_menu_item("Record english", start_english))
+    menu.append(create_menu_item("Record german", start_german))
+    menu.append(create_menu_item("Quit", quit))
     status_icon.connect('popup-menu', lambda icon, button, time: menu.popup(None, None, None, icon, button, time))
 
     task_handler_thread = threading.Thread(target=tray_icon_task_handler, args=(task_queue, status_icon))
