@@ -194,7 +194,7 @@ def create_menu_item(label, callback):
     item.show()
     return item
 
-if __name__ == '__main__':
+def main():
     write_pid()
     # Register the signal handler
     signal.signal(signal.SIGUSR1, record_signal)
@@ -221,3 +221,6 @@ if __name__ == '__main__':
 
     Gtk.main()
     task_handler_thread.join()
+
+if __name__ == '__main__':
+    main()
