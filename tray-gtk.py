@@ -108,6 +108,7 @@ def record(language=None):
 def get_and_insert_text(language):
     text = get_audio_text(language)
     if text:
+        task_queue.put(Task('change_icon', CURSOR_ICON))
         task_queue.put(Task('insert_text', text))
 
 def get_audio_text(language=None):
@@ -137,7 +138,6 @@ def tray_icon_task_handler(task_queue, status_icon):
         elif task.action == 'get_and_insert_text':
             get_and_insert_text(task.data)
         elif task.action == 'insert_text':
-            task_queue.put(Task('change_icon', CURSOR_ICON))
             insert_text_at_cursor(task.data)
             task_queue.put(Task('change_icon', PAUSE_ICON))
         elif task.action == 'quit':
