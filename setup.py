@@ -9,7 +9,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'speech_tray = speech_tray:main',
+            'speech-tray = speech_tray:main',
         ],
     },
 )

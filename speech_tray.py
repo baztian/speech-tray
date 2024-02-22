@@ -122,9 +122,9 @@ class Task:
 # Signal handler for SIGUSR1
 def record_signal(signum, frame):
     if signum == signal.SIGUSR2:
-        start_recording()
+        start_recording('de-DE')
     else:
-        start_recording()
+        start_recording('en-US')
 
 def start_recording(language=None):
     task_queue.put(Task('change_icon', RECORD_ICON))
@@ -207,7 +207,7 @@ def create_menu():
     item_german.connect('toggled', lambda _: set_language('de-DE'))
     menu.append(item_german)
     item_quit = Gtk.MenuItem('Quit')
-    item_quit.connect('activate', quit)
+    item_quit.connect('activate', lambda _: task_queue.put(Task('quit')))
     menu.append(item_quit)
     menu.show_all()
     return menu
