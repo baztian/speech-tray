@@ -26,6 +26,8 @@ IMG_SIZE = (64, 64)
 
 recognizer = sr.Recognizer()
 
+selected_language = 'en-US'
+
 def create_pixbuf_from_image(image):
     data = image.tobytes()
     w, h = image.size
@@ -120,17 +122,11 @@ class Task:
 # Signal handler for SIGUSR1
 def record_signal(signum, frame):
     if signum == signal.SIGUSR2:
-        start_german()
+        start_recording()
     else:
-        start_english()
+        start_recording()
 
-def start_english(*args):
-    record()
-
-def start_german(*args):
-    record(language='de-DE')
-
-def record(language=None):
+def start_recording(language=None):
     task_queue.put(Task('change_icon', RECORD_ICON))
     task_queue.put(Task('get_and_insert_text', language))
     task_queue.put(Task('change_icon', PAUSE_ICON))
@@ -167,11 +163,12 @@ def tray_icon_task_handler(task_queue, status_icon):
             get_and_insert_text(task.data)
         elif task.action == 'extract_text':
             text = extract_text(*task.data)
-            task_queue.put(Task('change_icon', CURSOR_ICON))
-            task_queue.put(Task('insert_text', text))
+            if text:
+                task_queue.put(Task('change_icon', CURSOR_ICON))
+                task_queue.put(Task('insert_text', text))
+            task_queue.put(Task('change_icon', PAUSE_ICON))
         elif task.action == 'insert_text':
             insert_text_at_cursor(task.data)
-            task_queue.put(Task('change_icon', PAUSE_ICON))
         elif task.action == 'quit':
             GLib.idle_add(Gtk.main_quit)
             break
@@ -188,10 +185,33 @@ def write_pid():
         f.write(str(os.getpid()))
 
 def create_menu_item(label, callback):
-    item = Gtk.MenuItem()
-    item.set_label(label)
+    item = Gtk.MenuItem(label)
     item.connect("activate", callback)
     return item
+
+def set_language(language):
+    global selected_language
+    selected_language = language
+
+def on_left_click(icon):
+    print(icon)
+    start_recording(selected_language)
+
+def create_menu():
+    menu = Gtk.Menu()
+    group = []
+    item_english = Gtk.RadioMenuItem.new_with_label(group, 'English')
+    item_english.connect('toggled', lambda _: set_language('en-US'))
+    menu.append(item_english)
+    group = item_english.get_group()
+    item_german = Gtk.RadioMenuItem.new_with_label(group, 'German')
+    item_german.connect('toggled', lambda _: set_language('de-DE'))
+    menu.append(item_german)
+    item_quit = Gtk.MenuItem('Quit')
+    item_quit.connect('activate', quit)
+    menu.append(item_quit)
+    menu.show_all()
+    return menu
 
 # Queue to hold the change commands
 task_queue = queue.Queue()
@@ -208,13 +228,9 @@ def main():
     status_icon.set_tooltip_text('Tray Icon Example')
     status_icon.set_visible(True)
 
-    # Create a menu for the status icon
-    menu = Gtk.Menu()
-    menu.append(create_menu_item("Record english", start_english))
-    menu.append(create_menu_item("Record german", start_german))
-    menu.append(create_menu_item("Quit", lambda _: task_queue.put(Task('quit'))))
-    menu.show_all()
+    menu = create_menu()
     status_icon.connect('popup-menu', lambda icon, button, time: menu.popup(None, None, None, icon, button, time))
+    status_icon.connect('activate', on_left_click)
 
     task_handler_thread = threading.Thread(target=tray_icon_task_handler, args=(task_queue, status_icon))
     task_handler_thread.start()
