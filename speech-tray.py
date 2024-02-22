@@ -107,10 +107,10 @@ def record_signal(signum, frame):
     else:
         start_english()
 
-def start_english():
+def start_english(*args):
     record()
 
-def start_german():
+def start_german(*args):
     record(language='de-DE')
 
 def record(language=None):
