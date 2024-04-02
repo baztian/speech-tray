@@ -10,8 +10,8 @@ First, install the system-level dependencies. On Ubuntu, you can do this with:
 
 Then, clone the repository and install the Python dependencies:
 
-    git clone https://github.com/baztian/speech_tray.git
-    cd speech_tray
+    git clone https://github.com/baztian/speech-tray.git
+    cd speech-tray
     pip install -r requirements.txt
     pip install .
 
