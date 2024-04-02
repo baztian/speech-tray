@@ -15,6 +15,27 @@ Then, clone the repository and install the Python dependencies:
     pip install -r requirements.txt
     pip install .
 
+### Startup and stop
+
+    speech-tray
+    kill $(cat "$HOME/.local/share/speech-tray/pid.txt")
+
+### Add keyboard shortcuts
+
+In order to control via keyboard shortcuts you can control speech-tray via
+Unix signals.
+
+Depending on your window manager you can assign a key to one of the following
+commands.
+
+For english (`en-US`) speech recognition:
+
+    bash -c "kill -SIGUSR1 $(cat "$HOME/.local/share/speech-tray/pid.txt")"
+
+For german (`de-DE`) speech recognition:
+
+    bash -c "kill -SIGUSR2 $(cat "$HOME/.local/share/speech-tray/pid.txt")"
+
 ## License
 
 This project is licensed under the terms of the MIT license. See the [LICENSE](LICENSE) file for details.
