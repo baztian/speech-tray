@@ -6,7 +6,7 @@ Speech Tray is a system tray application that uses speech recognition to convert
 
 First, install the system-level dependencies. On Ubuntu, you can do this with:
 
-    sudo apt-get install python3-gi gir1.2-gtk-3.0
+    sudo apt-get install python3-gi gir1.2-gtk-3.0 gir1.2-appindicator3-0.1 python3-pil portaudio19-dev
 
 Then, clone the repository and install the Python dependencies:
 
