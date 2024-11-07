@@ -5,7 +5,8 @@ setup(
     version="0.1",
     py_modules=["speech_tray"],
     install_requires=[
-        'SpeechRecognition'
+        'SpeechRecognition',
+        'PyAudio'
     ],
     entry_points={
         'console_scripts': [
